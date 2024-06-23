@@ -1,0 +1,152 @@
+name: dental_key
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.4.2+3
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  image_picker: ^1.0.7
+  image_cropper: ^4.0.1
+  internet_file: ^1.2.0
+  intl_phone_number_input: ^0.7.4
+  country_picker: ^2.0.25
+  url_launcher: ^6.0.13
+  flutter_pdfview: ^1.3.2
+  shared_preferences: ^2.0.15
+  intl: ^0.19.0
+  path_provider: ^2.0.2
+  sqflite: ^2.0.0
+  badges: ^3.1.2
+  provider: ^6.0.1
+  http: ^0.13.4
+  flutter_phone_direct_caller: ^2.1.1 
+  jwt_decode: ^0.3.1  
+  dio: ^5.4.2
+  jwt_decoder: ^2.0.1
+  cupertino_icons: ^1.0.6
+  flutter_windowmanager: ^0.2.0
+  percent_indicator: ^4.2.3
+  flutter_countdown_timer: ^4.1.0
+  confetti: ^0.7.0
+  fl_chart: ^0.68.0
+  animated_bottom_navigation_bar: ^1.3.3
+  flutter_cached_pdfview: ^0.4.2
+  pdf: ^3.10.8
+  pdfx: ^2.6.0
+  file_picker: ^8.0.3
+  webview_flutter: ^4.7.0
+  flutter_svg: ^2.0.9
+  font_awesome_flutter: ^10.7.0
+  printing: ^5.7.0
+  uuid: ^4.4.0
+  timeago: ^3.0.2
+  flutter_downloader: ^1.7.11
+  device_info_plus: ^9.1.2
+  permission_handler: ^11.3.1
+  json_annotation: ^4.0.1
+  android_id: ^0.4.0
+  device_imei: ^0.0.4+2
+  currency_picker: ^2.0.4
+  local_auth: ^2.1.3
+  flutter_secure_storage: ^9.2.2
+  mailto: ^2.0.0
+  logging: ^1.0.2
+  app_tracking_transparency: ^2.0.1
+  advertising_id: ^2.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  assets:
+    - assets/logo.png
+    - assets/images/dentists_portal_unclicked.png
+    - assets/images/sad_smoji.png
+    - assets/images/dentalportaldoctor.png
+    - assets/images/patient_portal.png
+    - assets/images/patientportalpatient.png
+    - assets/images/dentalportalclicked.png
+    - assets/images/patientportalclicked.png
+    - assets/images/dentalportal_clicked.png
+    - assets/images/patientportal_clicked.png
+    - assets/images/dentalportal_unclicked.png
+    - assets/images/patientportal_unclicked.png
+    - assets/images/patientportalpatientclicked.png
+    - assets/images/dentalportaldoctorclicked.png
+    - assets/images/avatar_man.png
+    - assets/images/avatar_woman.png
+    - assets/images/avatar_default.png
+    - assets/images/Dropdown.png
+    - assets/images/dropdowntap.png
+    - assets/images/video_lectures.png
+    - assets/images/ips_logo.png
+    - assets/images/helping_material.png
+    - assets/images/free_books.png
+    - assets/images/UGTests.png
+    - assets/images/career_options.png
+    - assets/images/BDS_World_logo.png
+    - assets/images/dental_unit.png
+    - assets/images/appointments.png
+    - assets/images/mock_exams.png
+    - assets/images/rehanappointment.png
+    - assets/images/multimedia.png
+    - assets/images/IPSimages/Anatomy.png
+    - assets/images/IPSimages/Ob.png    
+    - assets/images/IPSimages/biochemistry.png
+    - assets/images/IPSimages/physiology.png    
+    - assets/images/IPSimages/UQs_1st.png
+    - assets/images/IPSimages/pharma.png    
+    - assets/images/IPSimages/patho.png
+    - assets/images/IPSimages/CD.png    
+    - assets/images/IPSimages/DM.png
+    - assets/images/IPSimages/UQs_2nd.png    
+    - assets/images/IPSimages/GM.png
+    - assets/images/IPSimages/GS.png    
+    - assets/images/IPSimages/OP.png
+    - assets/images/IPSimages/OM.png    
+    - assets/images/IPSimages/perio.png
+    - assets/images/IPSimages/UQs_3rd.png    
+    - assets/images/IPSimages/prostho.png
+    - assets/images/IPSimages/ortho.png    
+    - assets/images/IPSimages/operative.png
+    - assets/images/IPSimages/OMFS.png    
+    - assets/images/IPSimages/UQs_Final.png
+    - assets/pdfs/Test_ID_1_MCQs.pdf
+    - assets/pdfs/StudentForm_2.pdf
+    - assets/images/congrats_emoji.png    
+    - assets/images/alas_emoji.jpg  
+    - assets/fonts/help_icon.png  
+    - assets/images/team_members.jpg
+    - assets/images/new_message.png
+    - assets/images/books_background.jpg
+    - assets/images/books_backgrounding.jpg
+    - assets/images/articles_back_one.jpeg
+    - assets/images/articles_back_two.jpg
+    - assets/images/cards.png
+    - assets/images/cart_back.png
+    - assets/images/device_change.png
+    - assets/images/orders_background.png
+    - assets/images/mystore_back.png
+    
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Medium.ttf
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+  remove_alpha_ios: true

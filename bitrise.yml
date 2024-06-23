@@ -1,0 +1,48 @@
+format_version: "13"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: macos
+workflows:
+  deploy:
+    steps:
+    - activate-ssh-key@4: {}
+    - git-clone@8: {}
+    - certificate-and-profile-installer@1: {}
+    - xcode-test-mac@1:
+        inputs:
+        - project_path: $BITRISE_PROJECT_PATH
+        - scheme: $BITRISE_SCHEME
+    - xcode-archive-mac@1:
+        inputs:
+        - project_path: $BITRISE_PROJECT_PATH
+        - scheme: $BITRISE_SCHEME
+        - export_method: $BITRISE_EXPORT_METHOD
+    - deploy-to-bitrise-io@2: {}
+  primary:
+    steps:
+    - activate-ssh-key@4: {}
+    - git-clone@8: {}
+    - xcode-test-mac@1:
+        inputs:
+        - project_path: $BITRISE_PROJECT_PATH
+        - scheme: $BITRISE_SCHEME
+    - deploy-to-bitrise-io@2: {}
+meta:
+  bitrise.io:
+    stack: osx-xcode-15.4.x
+    machine_type_id: g2-m1.4core
+app:
+  envs:
+  - opts:
+      is_expand: false
+    BITRISE_PROJECT_PATH: macos/Runner.xcworkspace
+  - opts:
+      is_expand: false
+    BITRISE_SCHEME: Runner
+  - opts:
+      is_expand: false
+    BITRISE_EXPORT_METHOD: app-store
+trigger_map:
+- push_branch: main
+  workflow: primary
+- pull_request_source_branch: '*'
+  workflow: primary

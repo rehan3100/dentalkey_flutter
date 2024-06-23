@@ -1,0 +1,64 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    environment:
+      vars:
+        KEYCHAIN_PASSWORD: Rehan@734266479
+        CERTIFICATE_PASSWORD: Rehan@734266479
+    scripts:
+      - name: Print environment variables
+        script: |
+          echo "KEYCHAIN_PASSWORD length: ${#KEYCHAIN_PASSWORD}"
+          echo "CERTIFICATE_PASSWORD length: ${#CERTIFICATE_PASSWORD}"
+
+      - name: Set up keychain and add certificates
+        script: |
+          echo "Initializing keychain..."
+          security create-keychain -p "$KEYCHAIN_PASSWORD" /Users/builder/Library/codemagic-cli-tools/keychains/build.keychain
+          security default-keychain -s /Users/builder/Library/codemagic-cli-tools/keychains/build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" /Users/builder/Library/codemagic-cli-tools/keychains/build.keychain
+          security set-keychain-settings -lut 21600 /Users/builder/Library/codemagic-cli-tools/keychains/build.keychain
+
+          echo "Checking if certificate file exists..."
+          if [ -f /Users/builder/Library/MobileDevice/Certificates/tmpfcle0iwk.p12 ]; then
+            echo "Certificate file found."
+          else
+            echo "Certificate file not found!"
+            exit 1
+          fi
+
+          echo "Importing certificates with password..."
+          security import /Users/builder/Library/MobileDevice/Certificates/tmpfcle0iwk.p12 -k /Users/builder/Library/codemagic-cli-tools/keychains/build.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign || {
+            echo "Failed to import certificate"
+            echo "CERTIFICATE_PASSWORD: $CERTIFICATE_PASSWORD"
+            exit 1
+          }
+
+      - name: Build and code sign
+        script: |
+          echo "Building and signing the iOS app..."
+          flutter build ios --release --flavor ios-production -t lib/main_prod.dart
+
+          echo "Archiving the app..."
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath $HOME/build/Runner.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution: 57MY2GPC32" \
+            PROVISIONING_PROFILE_SPECIFIER="DentalKeyDistribute"
+
+          echo "Exporting the archive to an IPA..."
+          xcodebuild -exportArchive \
+            -archivePath $HOME/build/Runner.xcarchive \
+            -exportPath $HOME/build \
+            -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: Build artifact
+        script: |
+          echo "Moving the generated IPA file..."
+          mv $HOME/build/Runner.ipa $HOME/build/ios/Runner.ipa
+
+    artifacts:
+      - build/ios/Runner.ipa
