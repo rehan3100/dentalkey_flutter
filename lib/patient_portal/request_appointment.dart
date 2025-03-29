@@ -39,6 +39,12 @@ class _AppointmentRequestScreenState extends State<AppointmentRequestScreen> {
     'Saturday',
     'Sunday'
   ];
+  String formatTimeOfDay(TimeOfDay? tod) {
+    if (tod == null) return '';
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, tod.hour, tod.minute);
+    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:00";
+  }
 
   void submitRequest() async {
     if (!consentGiven) {
