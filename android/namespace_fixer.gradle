@@ -1,0 +1,13 @@
+gradle.projectsEvaluated {
+    allprojects { p ->
+        if (!p.name.startsWith("device_") && p.name != "app") return
+
+        if (p.plugins.hasPlugin("com.android.library")) {
+            if (!p.android.hasProperty("namespace")) {
+                def defaultNs = "com.auto.generated.${p.name.replace('-', '_')}"
+                println("✅ Auto-adding missing namespace to ${p.name}: $defaultNs")
+                p.android.namespace = defaultNs
+            }
+        }
+    }
+}

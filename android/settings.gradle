@@ -24,3 +24,6 @@ plugins {
 }
 
 include ":app"
+
+// ✅ Auto namespace fixer
+apply from: file("namespace_fixer.gradle")
