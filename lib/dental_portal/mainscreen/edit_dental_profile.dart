@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 class EditProfileScreen extends StatefulWidget {
   final String accessToken;
@@ -24,7 +26,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _degreeAwardingBodyController;
   late TextEditingController _expectedYearOfGraduationController;
   late TextEditingController _membershipStatusController;
-
+  File? _photoIdFile;
+  File? _addressProofFile;
+  File? _currentStatusProofFile;
+  File? _professionalRegistrationFile;
+  File? _otherDocumentFile;
   bool _isLoading = true;
   bool _isError = false;
 
@@ -263,7 +269,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             'Undergraduate Dental Student',
                             'General Dentist',
                             'Postgraduate Dental Student',
-                            'Specialist Dentist'
+                            'Specialist Dentist',
+                            'Dental Therapist',
+                            'Dental Hygienist',
+                            'Dental Nurse',
+                            'Dental Therapy Student',
+                            'Dental Hygiene Student',
+                            'Trainee Dental Nurse',
                           ].map<DropdownMenuItem<String>>((String value) {
                             return DropdownMenuItem<String>(
                               value: value,

@@ -8,6 +8,7 @@ import 'package:flutter/gestures.dart';
 import 'package:country_picker/country_picker.dart';
 import 'dart:io';
 import 'package:flutter_windowmanager/flutter_windowmanager.dart';
+import 'package:file_picker/file_picker.dart';
 
 class EmailValidator {
   static String? validate(String? value) {
@@ -68,6 +69,12 @@ class _DentalSignupState extends State<DentalSignup> {
   List<int> years = List<int>.generate(25, (index) => index + 2006);
   int _selectedYear = DateTime.now().year;
 
+  File? _photoIdFile;
+  File? _addressProofFile;
+  File? _currentStatusProofFile;
+  File? _professionalRegistrationFile;
+  File? _otherDocumentFile;
+
   bool _passwordVisible = false;
 
   @override
@@ -95,6 +102,17 @@ class _DentalSignupState extends State<DentalSignup> {
     }
   }
 
+  Future<void> _pickFile(Function(File) onFilePicked) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'png'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      onFilePicked(File(result.files.single.path!));
+    }
+  }
+
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
       final String email = _emailController.text;
@@ -114,22 +132,6 @@ class _DentalSignupState extends State<DentalSignup> {
         );
         return;
       }
-
-      Map<String, dynamic> requestData = {
-        'email': email,
-        'password': password,
-        'full_name': fullName,
-        'gender': _selectedGender,
-        'current_status': _selectedCurrentStatus,
-        'phone_number': phoneNumber,
-        'whatsapp_number': whatsappNumber,
-        'alternative_contact_number': alternativeNumber,
-        'institution_practice': institution,
-        'degree_awarding_body': _degreeAwardingBody,
-        'expected_year_of_graduation': _selectedYear,
-        'current_country': _selectedCurrentCountry,
-        'country_of_graduation': _selectedGraduationCountry,
-      };
 
       // Show loader
       showDialog(
@@ -153,12 +155,52 @@ class _DentalSignupState extends State<DentalSignup> {
       );
 
       try {
-        final response = await http.post(
-          Uri.parse(
-              'https://dental-key-738b90a4d87a.herokuapp.com/users/dental/signup/'),
-          body: json.encode(requestData),
-          headers: {'Content-Type': 'application/json'},
-        );
+        var uri = Uri.parse(
+            'https://dental-key-738b90a4d87a.herokuapp.com/users/dental/signup/');
+
+        var request = http.MultipartRequest('POST', uri);
+
+        // Add text fields
+        request.fields['email'] = email;
+        request.fields['password'] = password;
+        request.fields['full_name'] = fullName;
+        request.fields['gender'] = _selectedGender;
+        request.fields['current_status'] = _selectedCurrentStatus;
+        request.fields['phone_number'] = phoneNumber;
+        request.fields['whatsapp_number'] = whatsappNumber;
+        request.fields['alternative_contact_number'] = alternativeNumber;
+        request.fields['institution_practice'] = institution;
+        request.fields['degree_awarding_body'] = _degreeAwardingBody;
+        request.fields['expected_year_of_graduation'] =
+            _selectedYear.toString();
+        request.fields['current_country'] = _selectedCurrentCountry;
+        request.fields['country_of_graduation'] = _selectedGraduationCountry;
+
+        // Add files (if selected)
+        if (_photoIdFile != null) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'photo_id', _photoIdFile!.path));
+        }
+        if (_addressProofFile != null) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'address_proof', _addressProofFile!.path));
+        }
+        if (_currentStatusProofFile != null) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'current_status_proof', _currentStatusProofFile!.path));
+        }
+        if (_professionalRegistrationFile != null) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'professional_registration_proof',
+              _professionalRegistrationFile!.path));
+        }
+        if (_otherDocumentFile != null) {
+          request.files.add(await http.MultipartFile.fromPath(
+              'other_document', _otherDocumentFile!.path));
+        }
+
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
 
         Navigator.of(context).pop(); // Hide loader
 
@@ -173,17 +215,12 @@ class _DentalSignupState extends State<DentalSignup> {
           final responseBody = json.decode(response.body);
           String errorMessage = 'Failed to signup. Please try again later.';
 
-          print('Response body: ${response.body}');
-
-          if (responseBody.containsKey('email')) {
+          if (responseBody is Map && responseBody.containsKey('email')) {
             errorMessage = responseBody['email'][0];
           } else if (responseBody is Map &&
               responseBody.containsKey('non_field_errors')) {
             errorMessage = responseBody['non_field_errors'][0];
           }
-
-          print('Signup failed with status: ${response.statusCode}');
-          print('Error message: $errorMessage');
 
           showDialog(
             context: context,
@@ -231,744 +268,463 @@ class _DentalSignupState extends State<DentalSignup> {
   Widget build(BuildContext context) {
     double fem = 1.0;
     double ffem = 1.0;
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(0 * fem, 6 * fem, 0 * fem, 0 * fem),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              border: Border.all(color: Color(0xff5a5a5a)),
-              color: Color(0xff385a92),
-              borderRadius: BorderRadius.circular(45 * fem),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  color: Color(0xff385a92),
-                  width: double.infinity,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        margin:
-                            EdgeInsets.fromLTRB(0 * fem, 20 * fem, 0 * fem, 5),
-                        width: 150 * fem,
-                        height: 200 * fem,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(15 * fem),
-                          child: Image.asset(
-                            'assets/images/dentalportalclicked.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 0 * fem, 0),
-                  color: Color.fromARGB(255, 255, 255, 255),
-                  width: double.infinity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.fromLTRB(
-                            0 * fem, 20 * fem, 0 * fem, 0 * fem),
-                        child: Text(
-                          'SIGN UP',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 30 * ffem,
-                            fontWeight: FontWeight.w600,
-                            height: 1.2125 * ffem / fem,
-                            letterSpacing: -0.45 * fem,
-                            color: Color(0xff385a92),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20.0),
-                      Container(
-                        margin: EdgeInsets.fromLTRB(
-                            20 * fem, 0 * fem, 20 * fem, 20 * fem),
-                        width: double.infinity,
-                        child: Form(
-                          key: _formKey,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                  controller: _emailController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Email Address',
-                                    labelStyle:
-                                        TextStyle(color: Color(0xff385a92)),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide(
-                                        color: Color(0xff385a92),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(Icons.email,
-                                        color: Color(0xff385a92)),
-                                  ),
-                                  keyboardType: TextInputType.emailAddress,
-                                  validator: EmailValidator.validate,
+
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: Color(0xff385a92),
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        // Top Image
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Center(
+                            child: Container(
+                              width: 150 * fem,
+                              height: 200 * fem,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15 * fem),
+                                child: Image.asset(
+                                  'assets/images/dentalportalclicked.png',
+                                  fit: BoxFit.cover,
                                 ),
-                                if (_emailError != null)
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      _emailError!,
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                SizedBox(height: 20.0),
-                                TextFormField(
-                                  controller: _passwordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Password',
-                                    labelStyle:
-                                        TextStyle(color: Color(0xff385a92)),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide(
-                                        color: Color(0xff385a92),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(Icons.lock,
-                                        color: Color(0xff385a92)),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _passwordVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                        color: Color(0xff385a92),
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _passwordVisible = !_passwordVisible;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  obscureText: !_passwordVisible,
-                                  validator: PasswordValidator.validate,
-                                ),
-                                if (_passwordError != null)
-                                  Padding(
-                                    padding: EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      _passwordError!,
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                SizedBox(height: 20.0),
-                                TextFormField(
-                                  controller: _confirmPasswordController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Confirm Password',
-                                    labelStyle:
-                                        TextStyle(color: Color(0xff385a92)),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide(
-                                        color: Color(0xff385a92),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(Icons.lock,
-                                        color: Color(0xff385a92)),
-                                  ),
-                                  obscureText: !_passwordVisible,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please confirm your password';
-                                    } else if (value !=
-                                        _passwordController.text) {
-                                      return 'Passwords do not match';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 20.0),
-                                TextFormField(
-                                  controller: _fullNameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'Full Name',
-                                    labelStyle:
-                                        TextStyle(color: Color(0xff385a92)),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide(
-                                        color: Color(0xff385a92),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(Icons.person,
-                                        color: Color(0xff385a92)),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your full name';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 20),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: DropdownButtonFormField<String>(
-                                        value: _selectedGender,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _selectedGender = value!;
-                                          });
-                                        },
-                                        items: ['Male', 'Female', 'Other']
-                                            .map<DropdownMenuItem<String>>(
-                                                (String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          );
-                                        }).toList(),
-                                        decoration: InputDecoration(
-                                          labelText: 'Gender',
-                                          labelStyle:
-                                              TextStyle(color: Color(0xff385a92)),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xff385a92),
-                                              width: 2.0,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.help_outline,
-                                          color: Color(0xff385a92)),
-                                      onPressed: () {
-                                        _showInfoDialog('Gender',
-                                            'Please select your gender.');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: DropdownButtonFormField<String>(
-                                        value: _selectedCurrentStatus,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _selectedCurrentStatus = value!;
-                                          });
-                                        },
-                                        items: [
-                                          'Undergraduate Dental Student',
-                                          'General Dentist',
-                                          'Postgraduate Dental Student',
-                                          'Specialist Dentist'
-                                        ].map<DropdownMenuItem<String>>(
-                                            (String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          );
-                                        }).toList(),
-                                        decoration: InputDecoration(
-                                          labelText: 'Your Current Status',
-                                          labelStyle:
-                                              TextStyle(color: Color(0xff385a92)),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xff385a92),
-                                              width: 2.0,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.help_outline,
-                                          color: Color(0xff385a92)),
-                                      onPressed: () {
-                                        _showInfoDialog('Current Status',
-                                            'This information is required to get exact information about your current status. You can later change this in your edit profile section of the account page. This will help us identify that you are the right user of the app or not.');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20.0),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: InternationalPhoneNumberInput(
-                                        onInputChanged: (PhoneNumber? number) {
-                                          setState(() {
-                                            _phoneNumber = number?.phoneNumber ?? '';
-                                            _selectedCountryCode =
-                                                number?.isoCode ?? 'US';
-                                          });
-                                        },
-                                        selectorConfig: SelectorConfig(
-                                          selectorType:
-                                              PhoneInputSelectorType.BOTTOM_SHEET,
-                                        ),
-                                        autoValidateMode:
-                                            AutovalidateMode.onUserInteraction,
-                                        inputDecoration: InputDecoration(
-                                          labelText: 'Phone Number',
-                                          labelStyle: TextStyle(
-                                            color: Color(0xff385a92),
-                                          ),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xff385a92),
-                                              width: 2.0,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey.shade300,
-                                              width: 1.0,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 15.0, horizontal: 10.0),
-                                          floatingLabelBehavior:
-                                              FloatingLabelBehavior.auto,
-                                        ),
-                                        initialValue: PhoneNumber(
-                                            isoCode: _selectedCountryCode),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.help_outline,
-                                          color: Color(0xff385a92)),
-                                      onPressed: () {
-                                        _showInfoDialog('Phone Number',
-                                            'At least one phone number is required to create your account. In case you are unable to reply on email, we would like to contact you using phone number.');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20.0),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: InternationalPhoneNumberInput(
-                                        onInputChanged: (PhoneNumber? number) {
-                                          setState(() {
-                                            _whatsappNumber =
-                                                number?.phoneNumber ?? '';
-                                            _selected2CountryCode =
-                                                number?.isoCode ?? 'US';
-                                          });
-                                        },
-                                        selectorConfig: SelectorConfig(
-                                          selectorType:
-                                              PhoneInputSelectorType.BOTTOM_SHEET,
-                                        ),
-                                        autoValidateMode:
-                                            AutovalidateMode.onUserInteraction,
-                                        inputDecoration: InputDecoration(
-                                          labelText: 'WhatsApp Number',
-                                          labelStyle: TextStyle(
-                                            color: Color(0xff385a92),
-                                          ),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xff385a92),
-                                              width: 2.0,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey.shade300,
-                                              width: 1.0,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 15.0, horizontal: 10.0),
-                                          floatingLabelBehavior:
-                                              FloatingLabelBehavior.auto,
-                                        ),
-                                        initialValue: PhoneNumber(
-                                            isoCode: _selected2CountryCode),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.help_outline,
-                                          color: Color(0xff385a92)),
-                                      onPressed: () {
-                                        _showInfoDialog('WhatsApp Number',
-                                            'This is mandatory as part of your verification process that you are really a dental student or dentist. On WhatsApp, you will only be receiving a text message from "+923078623100" or "+447956646619". You will be requested to provide your eligibility documents on either WhatsApp or email to dentalkey.rehan@gmail.com.');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20.0),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: InternationalPhoneNumberInput(
-                                        onInputChanged: (PhoneNumber? number) {
-                                          setState(() {
-                                            _alternativeNumber =
-                                                number?.phoneNumber ?? '';
-                                            _selected3CountryCode =
-                                                number?.isoCode ?? 'US';
-                                          });
-                                        },
-                                        selectorConfig: SelectorConfig(
-                                          selectorType:
-                                              PhoneInputSelectorType.BOTTOM_SHEET,
-                                        ),
-                                        autoValidateMode:
-                                            AutovalidateMode.onUserInteraction,
-                                        inputDecoration: InputDecoration(
-                                          labelText:
-                                              'Alternative Contact Number',
-                                          labelStyle: TextStyle(
-                                            color: Color(0xff385a92),
-                                          ),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xff385a92),
-                                              width: 2.0,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey.shade300,
-                                              width: 1.0,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(
-                                              vertical: 15.0, horizontal: 10.0),
-                                          floatingLabelBehavior:
-                                              FloatingLabelBehavior.auto,
-                                        ),
-                                        initialValue: PhoneNumber(
-                                            isoCode: _selected3CountryCode),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.help_outline,
-                                          color: Color(0xff385a92)),
-                                      onPressed: () {
-                                        _showInfoDialog(
-                                            'Alternative Contact Number',
-                                            'You can provide any alternative contact number, if you do not have any you can either write phone number or WhatsApp contact number in place of alternative contact number.');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20.0),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _institutionController,
-                                        decoration: InputDecoration(
-                                          labelText:
-                                              'Institution/Practice Name',
-                                          labelStyle:
-                                              TextStyle(color: Color(0xff385a92)),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            borderSide: BorderSide(
-                                              color: Color(0xff385a92),
-                                              width: 2.0,
-                                            ),
-                                          ),
-                                          prefixIcon: Icon(Icons.school,
-                                              color: Color(0xff385a92)),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter your institution';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.help_outline,
-                                          color: Color(0xff385a92)),
-                                      onPressed: () {
-                                        _showInfoDialog('Institution or Practice Name',
-                                            'It will help us identifying that all the information you have given is matching with your eligibility documents or not. If you shift your practice or institute, please update it in your profile edit section.');
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 20),
-                                GestureDetector(
-                                  onTap: () {
-                                    _showCountryPickerDialog(true);
-                                  },
-                                  child: AbsorbPointer(
-                                    child: TextFormField(
-                                      controller: TextEditingController(
-                                          text: _selectedCurrentCountry),
-                                      decoration: InputDecoration(
-                                        labelText:
-                                            _selectedCurrentCountry.isEmpty
-                                                ? 'Select Current Country'
-                                                : 'Selected Current Country',
-                                        border: OutlineInputBorder(),
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 16.0, vertical: 12.0),
-                                        suffixIcon: Icon(Icons.arrow_drop_down),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 20),
-                                GestureDetector(
-                                  onTap: () {
-                                    _showCountryPickerDialog(false);
-                                  },
-                                  child: AbsorbPointer(
-                                    child: TextFormField(
-                                      controller: TextEditingController(
-                                          text: _selectedGraduationCountry),
-                                      decoration: InputDecoration(
-                                        labelText: _selectedGraduationCountry
-                                                .isEmpty
-                                            ? 'Select Country of Graduation'
-                                            : 'Selected Country of Graduation',
-                                        border: OutlineInputBorder(),
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 16.0, vertical: 12.0),
-                                        suffixIcon: Icon(Icons.arrow_drop_down),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 20.0),
-                                DropdownButtonFormField<int>(
-                                  value: _selectedYear,
-                                  onChanged: (int? newValue) {
-                                    setState(() {
-                                      _selectedYear = newValue!;
-                                    });
-                                  },
-                                  items: years
-                                      .map<DropdownMenuItem<int>>((int value) {
-                                    return DropdownMenuItem<int>(
-                                      value: value,
-                                      child: Text(value.toString()),
-                                    );
-                                  }).toList(),
-                                  decoration: InputDecoration(
-                                    labelText: 'Graduation Year',
-                                    labelStyle:
-                                        TextStyle(color: Color(0xff385a92)),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide(
-                                        color: Color(0xff385a92),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: 20.0),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Degree Awarding Body',
-                                    labelStyle:
-                                        TextStyle(color: Color(0xff385a92)),
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                      borderSide: BorderSide(
-                                        color: Color(0xff385a92),
-                                        width: 2.0,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(Icons.school,
-                                        color: Color(0xff385a92)),
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _degreeAwardingBody = value;
-                                    });
-                                  },
-                                ),
-                                SizedBox(height: 20.0),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: _handleSignup,
-                                    child: Text(
-                                      'Sign Up',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    style: ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all<Color>(
-                                              Color(0xff385a92)),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 20.0),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                LoginDental()),
-                                      );
-                                    },
-                                    child: RichText(
-                                      text: TextSpan(
-                                        text: 'Already have an account? ',
-                                        style:
-                                            TextStyle(color: Color(0xff385a92)),
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'Login Now',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xff385a92),
-                                            ),
-                                            recognizer: TapGestureRecognizer()
-                                              ..onTap = () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          LoginDental()),
-                                                );
-                                              },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+
+                        // Entire White Section (scrollable with tabs and button)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(30)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                offset: Offset(0, -2),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Title
+                              Text(
+                                'SIGN UP',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 26 * ffem,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff385a92),
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              // TabBar
+                              TabBar(
+                                indicatorColor: Color(0xff385a92),
+                                labelColor: Color(0xff385a92),
+                                unselectedLabelColor: Colors.grey,
+                                labelStyle: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                                tabs: const [
+                                  Tab(text: "Basic"),
+                                  Tab(text: "Contact"),
+                                  Tab(text: "Education"),
+                                  Tab(text: "Docs"),
+                                ],
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // Tab Views
+                              Container(
+                                height:
+                                    500, // Just enough to scroll inside tabs
+                                child: TabBarView(
+                                  children: [
+                                    _tabWrapper(buildBasicInfoTab()),
+                                    _tabWrapper(buildContactTab()),
+                                    _tabWrapper(buildEducationTab()),
+                                    _tabWrapper(buildDocumentsTab()),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Sign Up Button
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 12),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: _handleSignup,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xff385a92),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Sign Up',
+                                      style: TextStyle(fontSize: 18),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  /// A wrapper to make each tab scrollable with padding
+  Widget _tabWrapper(Widget child) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      child: Form(
+        key: _formKey,
+        child: child,
+      ),
+    );
+  }
+
+  Widget buildBasicInfoTab() {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _emailController,
+          decoration: _buildInputDecoration('Email Address', Icons.email),
+          keyboardType: TextInputType.emailAddress,
+          validator: EmailValidator.validate,
+        ),
+        if (_emailError != null)
+          Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(_emailError!, style: TextStyle(color: Colors.red)),
+          ),
+        SizedBox(height: 20),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: !_passwordVisible,
+          decoration: _buildPasswordInputDecoration('Password'),
+          validator: PasswordValidator.validate,
+        ),
+        if (_passwordError != null)
+          Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Text(_passwordError!, style: TextStyle(color: Colors.red)),
+          ),
+        SizedBox(height: 20),
+        TextFormField(
+          controller: _confirmPasswordController,
+          obscureText: !_passwordVisible,
+          decoration: _buildInputDecoration('Confirm Password', Icons.lock),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please confirm your password';
+            } else if (value != _passwordController.text) {
+              return 'Passwords do not match';
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: 20),
+        TextFormField(
+          controller: _fullNameController,
+          decoration: _buildInputDecoration('Full Name', Icons.person),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your full name';
+            }
+            return null;
+          },
+        ),
+        SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _selectedGender,
+                onChanged: (val) => setState(() => _selectedGender = val!),
+                items: ['Male', 'Female', 'Other']
+                    .map(
+                        (val) => DropdownMenuItem(value: val, child: Text(val)))
+                    .toList(),
+                decoration: _buildDropdownDecoration('Gender'),
+              ),
+            ),
+            _infoIcon('Gender', 'Please select your gender.'),
+          ],
+        ),
+        SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _selectedCurrentStatus,
+                onChanged: (val) =>
+                    setState(() => _selectedCurrentStatus = val!),
+                items: [
+                  'Undergraduate Dental Student',
+                  'General Dentist',
+                  'Postgraduate Dental Student',
+                  'Specialist Dentist',
+                  'Dental Therapist',
+                  'Dental Hygienist',
+                  'Dental Nurse',
+                  'Dental Therapy Student',
+                  'Dental Hygiene Student',
+                  'Trainee Dental Nurse',
+                ]
+                    .map(
+                        (val) => DropdownMenuItem(value: val, child: Text(val)))
+                    .toList(),
+                decoration: _buildDropdownDecoration('Your Current Status'),
+              ),
+            ),
+            _infoIcon('Current Status',
+                'This helps us verify your identity and tailor your experience.'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget buildContactTab() {
+    return Column(
+      children: [
+        _buildPhoneInputField(
+          'Phone Number',
+          _selectedCountryCode,
+          (number) {
+            _phoneNumber = number?.phoneNumber ?? '';
+            _selectedCountryCode = number?.isoCode ?? 'US';
+          },
+          'Phone Number',
+          'At least one number is required. In case of no email access, we’ll contact you here.',
+        ),
+        _buildPhoneInputField(
+          'WhatsApp Number',
+          _selected2CountryCode,
+          (number) {
+            _whatsappNumber = number?.phoneNumber ?? '';
+            _selected2CountryCode = number?.isoCode ?? 'US';
+          },
+          'WhatsApp Number',
+          'We’ll send a verification message from +923078623100 or +447956646619.',
+        ),
+        _buildPhoneInputField(
+          'Alternative Contact Number',
+          _selected3CountryCode,
+          (number) {
+            _alternativeNumber = number?.phoneNumber ?? '';
+            _selected3CountryCode = number?.isoCode ?? 'US';
+          },
+          'Alternative Number',
+          'You can reuse your phone or WhatsApp number here if needed.',
+        ),
+      ],
+    );
+  }
+
+  Widget buildEducationTab() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _institutionController,
+                decoration: _buildInputDecoration(
+                    'Institution/Practice Name', Icons.school),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your institution';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            _infoIcon(
+              'Institution or Practice',
+              'Make sure this matches your documents. You can update it later.',
+            ),
+          ],
+        ),
+        SizedBox(height: 20),
+        _buildCountryPicker(
+          label: 'Select Current Country',
+          selectedValue: _selectedCurrentCountry,
+          onTap: () => _showCountryPickerDialog(true),
+        ),
+        SizedBox(height: 20),
+        _buildCountryPicker(
+          label: 'Select Country of Graduation',
+          selectedValue: _selectedGraduationCountry,
+          onTap: () => _showCountryPickerDialog(false),
+        ),
+        SizedBox(height: 20),
+        DropdownButtonFormField<int>(
+          value: _selectedYear,
+          onChanged: (val) => setState(() => _selectedYear = val!),
+          items: years
+              .map((year) =>
+                  DropdownMenuItem(value: year, child: Text(year.toString())))
+              .toList(),
+          decoration: _buildDropdownDecoration('Graduation Year'),
+        ),
+        SizedBox(height: 20),
+        TextFormField(
+          onChanged: (val) => _degreeAwardingBody = val,
+          decoration:
+              _buildInputDecoration('Degree Awarding Body', Icons.school),
+        ),
+      ],
+    );
+  }
+
+  Widget buildDocumentsTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Upload Required Documents",
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        SizedBox(height: 10),
+        _uploadField(
+            "Photo ID", _photoIdFile, (f) => setState(() => _photoIdFile = f)),
+        _uploadField("Address Proof", _addressProofFile,
+            (f) => setState(() => _addressProofFile = f)),
+        _uploadField("Proof of Current Status", _currentStatusProofFile,
+            (f) => setState(() => _currentStatusProofFile = f)),
+        _uploadField(
+            "Professional Registration Proof",
+            _professionalRegistrationFile,
+            (f) => setState(() => _professionalRegistrationFile = f)),
+        _uploadField("Other Document", _otherDocumentFile,
+            (f) => setState(() => _otherDocumentFile = f)),
+      ],
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Color(0xff385a92)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+      prefixIcon: Icon(icon, color: Color(0xff385a92)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: BorderSide(color: Color(0xff385a92), width: 2.0),
+      ),
+    );
+  }
+
+  InputDecoration _buildPasswordInputDecoration(String label) {
+    return _buildInputDecoration(label, Icons.lock).copyWith(
+      suffixIcon: IconButton(
+        icon: Icon(
+          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+          color: Color(0xff385a92),
+        ),
+        onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+      ),
+    );
+  }
+
+  InputDecoration _buildDropdownDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Color(0xff385a92)),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        borderSide: BorderSide(color: Color(0xff385a92), width: 2.0),
+      ),
+    );
+  }
+
+  Widget _infoIcon(String title, String message) {
+    return IconButton(
+      icon: Icon(Icons.help_outline, color: Color(0xff385a92)),
+      onPressed: () => _showInfoDialog(title, message),
+    );
+  }
+
+  Widget _buildCountryPicker({
+    required String label,
+    required String selectedValue,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AbsorbPointer(
+        child: TextFormField(
+          controller: TextEditingController(text: selectedValue),
+          decoration: InputDecoration(
+            labelText:
+                selectedValue.isEmpty ? label : 'Selected: $selectedValue',
+            border: OutlineInputBorder(),
+            suffixIcon: Icon(Icons.arrow_drop_down),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneInputField(
+    String label,
+    String initialCode,
+    Function(PhoneNumber?) onChanged,
+    String infoTitle,
+    String infoMessage,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: InternationalPhoneNumberInput(
+            onInputChanged: onChanged,
+            selectorConfig: SelectorConfig(
+                selectorType: PhoneInputSelectorType.BOTTOM_SHEET),
+            autoValidateMode: AutovalidateMode.onUserInteraction,
+            inputDecoration: _buildInputDecoration(label, Icons.phone),
+            initialValue: PhoneNumber(isoCode: initialCode),
+          ),
+        ),
+        _infoIcon(infoTitle, infoMessage),
+      ],
     );
   }
 
@@ -1004,6 +760,38 @@ class _DentalSignupState extends State<DentalSignup> {
           ],
         );
       },
+    );
+  }
+
+  Widget _uploadField(
+      String label, File? selectedFile, Function(File) onFilePicked) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => _pickFile(onFilePicked),
+              icon: Icon(Icons.attach_file),
+              label: Text("Upload $label"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xff385a92),
+                foregroundColor: Colors.white,
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                selectedFile != null
+                    ? selectedFile.path.split('/').last
+                    : 'No file selected',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+      ],
     );
   }
 }

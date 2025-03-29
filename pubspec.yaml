@@ -2,7 +2,7 @@ name: dental_key
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.2+3
+version: 1.4.3+4
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -58,6 +58,7 @@ dependencies:
   logging: ^1.0.2
   app_tracking_transparency: ^2.0.1
   advertising_id: ^2.6.0
+  smooth_page_indicator: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,15 @@ dev_dependencies:
 
 flutter:
   assets:
+    - assets/images/default_practice.jpg
+    - assets/images/non_clinical_dental_professional_portal_clicked.png
+    - assets/images/non_clinical_dental_professional_portal_unclicked.png
+    - assets/images/clinical_dental_professional_portal_clicked.png
+    - assets/images/clinical_dental_professional_portal_unclicked.png
+    - assets/images/patient_portal_clicked.png
+    - assets/images/patient_portal_unclicked.png
+    - assets/images/marketplace_clicked.png
+    - assets/images/marketplace_unclicked.png
     - assets/logo.png
     - assets/images/dentists_portal_unclicked.png
     - assets/images/sad_smoji.png
@@ -135,7 +145,12 @@ flutter:
     - assets/images/device_change.png
     - assets/images/orders_background.png
     - assets/images/mystore_back.png
-    
+    - assets/images/clinical_case_discussion.png
+    - assets/placeholder.png
+    - assets/images/diamond.jpg
+    - assets/images/silver.jpg
+    - assets/images/gold.jpg
+
   fonts:
     - family: Inter
       fonts:

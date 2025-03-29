@@ -1,6 +1,9 @@
+import 'package:dental_key/marketplace/marketplace_main.dart';
+import 'package:dental_key/non_clinical_prof/signup.dart';
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
 import 'package:dental_key/dental_portal/authentication/login_dental.dart';
+import 'package:dental_key/patient_portal/authentication/login_patient.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -8,35 +11,44 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  bool isDentistPortalClicked = false;
-  bool isDentalDoctorClicked = false;
-  bool isPatientPortalClicked = false;
-  bool isPatientPatientClicked = false;
+  String selectedPortal = '';
 
-  void handleGroup1Click() {
-    setState(() {
-      isDentistPortalClicked = !isDentistPortalClicked;
-      if (isDentistPortalClicked) {
-        isDentalDoctorClicked = true;
-        isPatientPortalClicked = false;
-        isPatientPatientClicked = false;
-      } else {
-        isDentalDoctorClicked = false;
-      }
-    });
-  }
-
-  void handleGroup2Click() {
-    setState(() {
-      isPatientPortalClicked = !isPatientPortalClicked;
-      if (isPatientPortalClicked) {
-        isPatientPatientClicked = true;
-        isDentistPortalClicked = false;
-        isDentalDoctorClicked = false;
-      } else {
-        isPatientPatientClicked = false;
-      }
-    });
+  Widget portalCard(String title, String assetClicked, String assetUnclicked) {
+    bool isSelected = selectedPortal == title;
+    return Expanded(
+      child: Card(
+        elevation: isSelected ? 10 : 5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              selectedPortal = title;
+            });
+          },
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Image.asset(
+                  isSelected ? assetClicked : assetUnclicked,
+                  height: 70,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.blue : Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<bool> _onWillPop() async {
@@ -52,102 +64,88 @@ class _MainScreenState extends State<MainScreen> {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        backgroundColor: Colors.grey[50],
         body: SingleChildScrollView(
-          child: Container(
-            width: double.infinity,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                  14.0, // left padding
-                  100.0, // top padding
-                  14.0, // right padding
-                  20.0), // bottom padding (adjust as needed)
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(bottom: 52.0),
-                    width: 220.0,
-                    height: 200.0,
-                    child: Image.asset(
-                      'assets/logo.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Text(
-                    'CHOOSE AN OPTION',
-                    style: TextStyle(
-                      color: Color(0xff000000),
-                      fontFamily: 'Inter',
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                      height: 3.0,
-                      letterSpacing: -0.24,
-                    ),
-                  ),
-                  SizedBox(height: 10.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: handleGroup1Click,
-                          child: AspectRatio(
-                            aspectRatio:
-                                1.0, // Adjust this ratio as needed to maintain the desired height
-                            child: Image.asset(
-                              isDentistPortalClicked
-                                  ? 'assets/images/dentalportal_clicked.png'
-                                  : 'assets/images/dentalportal_unclicked.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: handleGroup2Click,
-                          child: AspectRatio(
-                            aspectRatio:
-                                1.0, // Adjust this ratio as needed to maintain the desired height
-                            child: Image.asset(
-                              isPatientPortalClicked
-                                  ? 'assets/images/patientportal_clicked.png'
-                                  : 'assets/images/patientportal_unclicked.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        bottomNavigationBar: BottomAppBar(
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            padding: EdgeInsets.fromLTRB(16, 80, 16, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (isDentistPortalClicked && isDentalDoctorClicked)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LoginDental(),
-                        ),
-                      );
-                    },
-                    child: Text('Continue to Login'),
+                Image.asset('assets/logo.png', width: 180, height: 160),
+                SizedBox(height: 20),
+                Text(
+                  'Select Your Portal',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
-                if (isPatientPortalClicked && isPatientPatientClicked)
-                  Expanded(
-                    child: Text(
-                        'Right now, we are not accepting Patient Portal registrations. If you are a dentist or dental student you can register in Dentists Portal'),
+                ),
+                SizedBox(height: 30),
+                Row(children: [
+                  portalCard(
+                      'Clinical Professionals',
+                      'assets/images/clinical_dental_professional_portal_clicked.png',
+                      'assets/images/clinical_dental_professional_portal_unclicked.png'),
+                  portalCard(
+                      'Non-Clinical Professionals',
+                      'assets/images/non_clinical_dental_professional_portal_clicked.png',
+                      'assets/images/non_clinical_dental_professional_portal_unclicked.png'),
+                ]),
+                Row(children: [
+                  portalCard(
+                      'Patient Portal',
+                      'assets/images/patient_portal_clicked.png',
+                      'assets/images/patient_portal_unclicked.png'),
+                  portalCard(
+                      'Marketplace',
+                      'assets/images/marketplace_clicked.png',
+                      'assets/images/marketplace_unclicked.png'),
+                ]),
+                SizedBox(height: 30),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 40, vertical: 15)),
+                  onPressed: selectedPortal.isEmpty
+                      ? null
+                      : () {
+                          if (selectedPortal == 'Clinical Professionals') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginDental()),
+                            );
+                          } else if (selectedPortal ==
+                              'Non-Clinical Professionals') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      NonClinicalSignupScreen()),
+                            );
+                          } else if (selectedPortal == 'Patient Portal') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginPatient()),
+                            );
+                          } else if (selectedPortal == 'Marketplace') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      MarketplaceSelectionScreen()),
+                            );
+                          }
+                        },
+                  child: Text(
+                    selectedPortal.isEmpty
+                        ? 'Select Portal to Continue'
+                        : 'Continue to $selectedPortal',
+                    style: TextStyle(fontSize: 16),
                   ),
+                ),
               ],
             ),
           ),

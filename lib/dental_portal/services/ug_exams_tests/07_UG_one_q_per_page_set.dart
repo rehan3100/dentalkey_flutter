@@ -168,6 +168,10 @@ class _UGOQPPQuizQuestionsPageState extends State<UGOQPPQuizQuestionsPage> {
 
   void _submitQuiz() async {
     if (!_quizSubmitted) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
       _quizSubmitted = true; // Add this flag
 
       Map<String, dynamic> payload = Jwt.parseJwt(widget.accessToken);
@@ -262,10 +266,11 @@ class _UGOQPPQuizQuestionsPageState extends State<UGOQPPQuizQuestionsPage> {
       } catch (error) {
         print('Error: $error');
       }
+
+      setState(() {
+        _isSubmitting = false;
+      });
     }
-    setState(() {
-      _isSubmitting = false;
-    });
   }
 
   List<Map<String, dynamic>> _getAttemptedQuestions() {
@@ -350,116 +355,121 @@ class _UGOQPPQuizQuestionsPageState extends State<UGOQPPQuizQuestionsPage> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            if (widget.enable_timer) SizedBox(width: 10),
-            if (widget.enable_timer &&
-                _timerSeconds != null) // Added null check
-              CountdownTimer(
-                endTime: DateTime.now().millisecondsSinceEpoch +
-                    _timerSeconds! * 1000, // Added null check
-                textStyle: TextStyle(
-                  fontSize: 24,
-                  color: _timerSeconds! > widget.red_timer
-                      ? Colors.blue
-                      : (_timerSeconds! > widget.flashing_timer)
-                          ? Colors.red
-                          : (_isFlashing &&
-                                  _timerSeconds! <=
-                                      widget
-                                          .flashing_timer) // Check both conditions
-                              ? Color.fromARGB(
-                                  255, 255, 0, 0) // Flashing color 1 (white)
-                              : Color.fromARGB(
-                                  255, 255, 255, 255), // Flashing color 2 (red)
-                ),
-                onEnd: () {
-                  print('Timer ended');
-                  // You can add code to handle timer end here
-                },
-              ),
-            if (widget.enable_live_progress_bar) SizedBox(width: 10),
-            if (widget.enable_live_progress_bar)
-              LinearPercentIndicator(
-                animation: true,
-                lineHeight: 20.0,
-                animationDuration: 1000,
-                percent: progress,
-                center: Text(
-                  '$percentage%',
-                  style: TextStyle(fontSize: 14, color: Colors.white),
-                ),
-                linearStrokeCap: LinearStrokeCap.roundAll,
-                progressColor: const Color.fromARGB(255, 11, 200, 108),
-                backgroundColor: Colors.red,
-              ),
-            if (filteredQuestions.isNotEmpty)
-              Expanded(
-                child: _buildQuizQuestions(filteredQuestions),
+        body: _isSubmitting
+            ? Center(
+                child: CircularProgressIndicator(),
               )
-            else
-              Expanded(
-                child: Center(
-                  child: Text("No questions found"),
-                ),
-              ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
+            : Column(
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _currentPage > 0
-                          ? () {
-                              setState(() {
-                                _currentPage--;
-                              });
-                            }
-                          : null,
-                      child: Text('Previous'),
+                  if (widget.enable_timer) SizedBox(width: 10),
+                  if (widget.enable_timer &&
+                      _timerSeconds != null) // Added null check
+                    CountdownTimer(
+                      endTime: DateTime.now().millisecondsSinceEpoch +
+                          _timerSeconds! * 1000, // Added null check
+                      textStyle: TextStyle(
+                        fontSize: 24,
+                        color: _timerSeconds! > widget.red_timer
+                            ? Colors.blue
+                            : (_timerSeconds! > widget.flashing_timer)
+                                ? Colors.red
+                                : (_isFlashing &&
+                                        _timerSeconds! <=
+                                            widget
+                                                .flashing_timer) // Check both conditions
+                                    ? Color.fromARGB(255, 255, 0,
+                                        0) // Flashing color 1 (white)
+                                    : Color.fromARGB(255, 255, 255,
+                                        255), // Flashing color 2 (red)
+                      ),
+                      onEnd: () {
+                        print('Timer ended');
+                        // You can add code to handle timer end here
+                      },
                     ),
-                  ),
-                  SizedBox(width: 10), // Add some space between buttons
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _currentPage < filteredQuestions.length - 1
-                          ? () {
-                              setState(() {
-                                _currentPage++;
-                              });
-                            }
-                          : null,
-                      child: Text('Next'),
+                  if (widget.enable_live_progress_bar) SizedBox(width: 10),
+                  if (widget.enable_live_progress_bar)
+                    LinearPercentIndicator(
+                      animation: true,
+                      lineHeight: 20.0,
+                      animationDuration: 1000,
+                      percent: progress,
+                      center: Text(
+                        '$percentage%',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                      linearStrokeCap: LinearStrokeCap.roundAll,
+                      progressColor: const Color.fromARGB(255, 11, 200, 108),
+                      backgroundColor: Colors.red,
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                children: [
-                  if (widget.enable_navigation_bar &&
-                      widget.show_questions_counter)
+                  if (filteredQuestions.isNotEmpty)
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: () =>
-                            _showQuestionJumpModal(filteredQuestions.length),
-                        child: Text('Jump to'),
+                      child: _buildQuizQuestions(filteredQuestions),
+                    )
+                  else
+                    Expanded(
+                      child: Center(
+                        child: Text("No questions found"),
                       ),
                     ),
-                  SizedBox(width: 10), // Add some space between buttons
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _submitQuiz,
-                      child: Text('Submit'),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _currentPage > 0
+                                ? () {
+                                    setState(() {
+                                      _currentPage--;
+                                    });
+                                  }
+                                : null,
+                            child: Text('Previous'),
+                          ),
+                        ),
+                        SizedBox(width: 10), // Add some space between buttons
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed:
+                                _currentPage < filteredQuestions.length - 1
+                                    ? () {
+                                        setState(() {
+                                          _currentPage++;
+                                        });
+                                      }
+                                    : null,
+                            child: Text('Next'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      children: [
+                        if (widget.enable_navigation_bar &&
+                            widget.show_questions_counter)
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => _showQuestionJumpModal(
+                                  filteredQuestions.length),
+                              child: Text('Jump to'),
+                            ),
+                          ),
+                        SizedBox(width: 10), // Add some space between buttons
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _submitQuiz,
+                            child: Text('Submit'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

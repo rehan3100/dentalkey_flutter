@@ -5,9 +5,12 @@ import 'package:dental_key/dental_portal/mainscreen/my_appointments.dart';
 import 'package:dental_key/dental_portal/mainscreen/AID_team_members.dart';
 import 'package:dental_key/dental_portal/services/BDS_World/BDS_World.dart';
 import 'package:dental_key/dental_portal/services/career_pathways/career_pathways_homepage.dart';
+import 'package:dental_key/dental_portal/services/clinical_case_discussion/case_discussion.dart';
 import 'package:dental_key/dental_portal/services/dental_key_library/00_modal_dkl.dart';
 import 'package:dental_key/dental_portal/services/display_dental_clinic/Display_dental_clinic.dart';
+import 'package:dental_key/dental_portal/services/employment_history.dart';
 import 'package:dental_key/dental_portal/services/ips_books/IPS_Books.dart';
+import 'package:dental_key/dental_portal/services/pending_invitations.dart';
 import 'package:dental_key/dental_portal/services/ug_exams_tests/01_tests_homepage.dart';
 import 'package:dental_key/dental_portal/services/ug_helping_material/UG_helping_material.dart';
 import 'package:dental_key/dental_portal/services/make_appointment_with_Rehan/appointments_withdr_rehan.dart';
@@ -41,13 +44,40 @@ class _DentalPortalMainState extends State<DentalPortalMain> {
   bool showRow = false;
   final String accessToken;
   bool isLoading = false;
+  String? userEmail;
   final Logger _logger = Logger('DentalPortalMain'); // Initialize the logger
 
   _DentalPortalMainState({required this.accessToken});
   @override
   void initState() {
     super.initState();
-    _refreshPage();
+    _fetchUserEmail(); // fetch user email first
+    _refreshPage(); // then refresh unread counts
+  }
+
+  Future<void> _fetchUserEmail() async {
+    print("🔄 Fetching user email using access token...");
+
+    final response = await http.get(
+      Uri.parse('https://dental-key-738b90a4d87a.herokuapp.com/users/details/'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    print("📬 API Response Status: ${response.statusCode}");
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print("✅ Email fetched: ${data['email']}");
+
+      setState(() {
+        userEmail = data['email'];
+      });
+    } else {
+      print("❌ Failed to load user email: ${response.body}");
+    }
   }
 
   Future<void> _refreshPage() async {
@@ -233,6 +263,95 @@ class _DentalPortalMainState extends State<DentalPortalMain> {
                   ],
                 ),
               ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Column(
+                    children: [
+                      // ✅ Generate CV Card
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => Scaffold(
+                                      appBar:
+                                          AppBar(title: Text("Generate CV")),
+                                      body: Center(
+                                          child: Text(
+                                              "CV Generator Coming Soon!")),
+                                    )),
+                          );
+                        },
+                        child: Card(
+                          color: Colors.lightBlue.shade100,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.description,
+                                    size: 40, color: Colors.blueAccent),
+                                SizedBox(width: 16),
+                                Text(
+                                  "Generate Professional CV",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+
+                      // ✅ Jobs Portal Card
+                      GestureDetector(
+                        onTap: () {
+                          if (userEmail != null && userEmail!.isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EmploymentHistoryScreen(
+                                    userEmail: userEmail!),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text("User email not loaded yet")),
+                            );
+                          }
+                        },
+                        child: Card(
+                          color: Colors.green.shade100,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.work_outline,
+                                    size: 40, color: Colors.green),
+                                SizedBox(width: 16),
+                                Text(
+                                  "Jobs Portal",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               SliverPadding(
                 padding: const EdgeInsets.all(8.0),
                 sliver: SliverGrid.count(
@@ -311,6 +430,38 @@ class _DentalPortalMainState extends State<DentalPortalMain> {
                       Color.fromARGB(255, 139, 185, 245),
                     ),
                   ],
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ClinicalCaseDiscussion(accessToken: accessToken),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                    child: Column(
+                      children: [
+                        Image.asset(
+                            'assets/images/clinical_case_discussion.png'),
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            'Clinical Case Discussion',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],

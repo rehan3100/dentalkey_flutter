@@ -591,9 +591,9 @@ class _AIDTeamMembersPageState extends State<AIDTeamMembersPage>
                   : TabBarView(
                       controller: _tabController,
                       children: [
-                        buildTeamMembersListView(),
-                        buildCountryCabinetListView(),
-                        buildInstitutionalCabinetListView(),
+                        buildCoreTabView(),
+                        buildCountryCabinetTabView(),
+                        buildInstitutionalCabinetTabView(),
                       ],
                     ),
         ),
@@ -601,7 +601,7 @@ class _AIDTeamMembersPageState extends State<AIDTeamMembersPage>
     );
   }
 
-  Widget buildTeamMembersListView() {
+  Widget buildCoreTabView() {
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -712,7 +712,7 @@ class _AIDTeamMembersPageState extends State<AIDTeamMembersPage>
     );
   }
 
-  Widget buildCountryCabinetListView() {
+  Widget buildCountryCabinetTabView() {
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -784,83 +784,50 @@ class _AIDTeamMembersPageState extends State<AIDTeamMembersPage>
     );
   }
 
-  Widget buildInstitutionalCabinetListView() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.lightBlue[50],
-              borderRadius: BorderRadius.circular(8.0),
-              border: Border.all(color: Colors.lightBlue),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        hint: Text("Select Country"),
-                        value: selectedCountryId,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedCountryId = newValue;
-                            fetchInstitutionalCabinets(); // Fetch filtered institutional cabinets
-                          });
-                        },
-                        items: countries.map((country) {
-                          return DropdownMenuItem<String>(
-                            value: country['country_cabinet_id'],
-                            child: Text(country['country_name']),
-                          );
-                        }).toList(),
-                        isExpanded: true,
-                        dropdownColor: Colors.lightBlue[50],
-                        style: TextStyle(color: Colors.black),
+  Widget buildInstitutionalCabinetTabView() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.lightBlue[50],
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(color: Colors.lightBlue),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          hint: Text("Select Country"),
+                          value: selectedCountryId,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedCountryId = newValue;
+                              fetchInstitutionalCabinets(); // Fetch filtered institutional cabinets
+                            });
+                          },
+                          items: countries.map((country) {
+                            return DropdownMenuItem<String>(
+                              value: country['country_cabinet_id'],
+                              child: Text(country['country_name']),
+                            );
+                          }).toList(),
+                          isExpanded: true,
+                          dropdownColor: Colors.lightBlue[50],
+                          style: TextStyle(color: Colors.black),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: GestureDetector(
-                    onTap: resetCountrySelection,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      onEnter: (event) {
-                        setState(() {});
-                      },
-                      onExit: (event) {
-                        setState(() {});
-                      },
-                      child: Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (isInstitutionalCabinetSelected)
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ListTile(
-                        title: Text(selectedInstitutionalCabinetName ?? ''),
-                        subtitle: Text('Selected Institutional Cabinet'),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: resetInstitutionalCabinetSelection,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: GestureDetector(
+                      onTap: resetCountrySelection,
                       child: MouseRegion(
                         cursor: SystemMouseCursors.click,
                         onEnter: (event) {
@@ -875,14 +842,49 @@ class _AIDTeamMembersPageState extends State<AIDTeamMembersPage>
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        if (!isInstitutionalCabinetSelected)
-          Expanded(
-            child: ListView.builder(
+          if (isInstitutionalCabinetSelected)
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ListTile(
+                          title: Text(selectedInstitutionalCabinetName ?? ''),
+                          subtitle: Text('Selected Institutional Cabinet'),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: resetInstitutionalCabinetSelection,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          onEnter: (event) {
+                            setState(() {});
+                          },
+                          onExit: (event) {
+                            setState(() {});
+                          },
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          if (!isInstitutionalCabinetSelected)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
               itemCount: institutionalCabinets.length,
               itemBuilder: (context, index) {
                 final cabinet = institutionalCabinets[index];
@@ -899,11 +901,11 @@ class _AIDTeamMembersPageState extends State<AIDTeamMembersPage>
                 );
               },
             ),
-          ),
-        if (isInstitutionalCabinetSelected &&
-            selectedInstitutionalMembers.isNotEmpty)
-          buildSelectedInstitutionalMembersListView(),
-      ],
+          if (isInstitutionalCabinetSelected &&
+              selectedInstitutionalMembers.isNotEmpty)
+            buildSelectedInstitutionalMembersListView(),
+        ],
+      ),
     );
   }
 
